@@ -16,7 +16,7 @@ public class Reading {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     String sensorId;
-    @Column(name = "\"value\"")
+    @Column(name = "reading_value")
     Double value;
     LocalDateTime timestamp;
 
