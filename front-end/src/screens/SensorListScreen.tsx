@@ -30,6 +30,16 @@ const SensorListScreen = ({ navigation }: SensorListScreenProps) => {
   useEffect(() => {
     fetchReadings();
   }, []);
+  
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity style={styles.dashboardButton} onPress={() => navigation.navigate('Dashboard')}>
+          <Text style={styles.dashboardButtonText}>Dashboard</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   const fetchReadings = useCallback(async () => {
     try {
@@ -189,6 +199,19 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     color: '#666',
+  },
+  dashboardButton: {
+    marginRight: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  dashboardButtonText: {
+    color: '#fff',
+    fontWeight: '600',
   },
   listContainer: {
     padding: 16,

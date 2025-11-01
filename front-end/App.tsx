@@ -7,6 +7,7 @@ import { ActivityIndicator, View } from 'react-native';
 import SensorListScreen from './src/screens/SensorListScreen';
 import SensorDetailScreen from './src/screens/SensorDetailScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import DashboardScreen from './src/screens/DashboardScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import { apiService } from './src/services/apiService';
 
@@ -67,6 +68,7 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator
         key={isAuthenticated ? 'auth-stack' : 'guest-stack'}
+        initialRouteName={isAuthenticated ? 'Dashboard' : 'Login'}
         screenOptions={{
           headerStyle: {
             backgroundColor: '#007AFF',
@@ -80,15 +82,21 @@ export default function App() {
         {isAuthenticated ? (
           <>
             <Stack.Screen
+              name="Dashboard"
+              component={DashboardScreen}
+              options={{ title: 'Dashboard' }}
+            />
+            <Stack.Screen
               name="SensorList"
               component={SensorListScreen}
               options={{ title: 'Sensores IoT' }}
             />
             <Stack.Screen
               name="SensorDetail"
-              component={SensorDetailScreen}
               options={{ title: 'Detalhes do Sensor' }}
-            />
+            >
+              {(props) => <SensorDetailScreen {...(props as any)} />}
+            </Stack.Screen>
             <Stack.Screen
               name="Settings"
               options={{ title: 'Configurações' }}
