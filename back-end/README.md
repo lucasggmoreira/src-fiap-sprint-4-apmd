@@ -1,5 +1,7 @@
 # Backend - Spring Boot
 
+Backend RESTful responsável por autenticação JWT, persistência das leituras de sensores e exposição das APIs consumidas pelo app mobile.
+
 ## Integrantes
 
 - **Caio Caram de Souza** - RM: 552248
@@ -8,84 +10,78 @@
 - **Maria Eduarda de Carvalho Goda** - RM: 552276
 - **Maria Eloisa da Silva Santos** - RM: 552294
 
-## Instruções para Execução
+## Tecnologias e Arquitetura
 
-### Backend e Frontend em Conjunto
+- Spring Boot 3.5 (Web, Security, Data JPA, Validation)
+- MySQL 8/9 com migrations Flyway
+- JWT via biblioteca JJWT 0.11.5
+- Lombok para reduzir boilerplate
 
-1. **Iniciar o Backend:**
+### Estrutura de pacotes
+
+- `controllers`: `AuthController`, `ReadingController`
+- `services`: `AuthService`, `JwtService`, `ReadingService`
+- `models`: entidades `User`, `Reading` e DTOs
+- `config`: `SecurityConfig`, `JwtAuthenticationFilter`
+
+## Requisitos
+
+- Java 21
+- Maven 3.9+ (wrapper `./mvnw` incluído)
+- MySQL acessível em `jdbc:mysql://localhost:3306/api_readings`
+
+## Configuração do Banco
+
+1. Suba o MySQL (exemplo Docker):
+   ```bash
+   docker run --name mysql-iot -e MYSQL_ROOT_PASSWORD=root -e MYSQL_USER=admin -e MYSQL_PASSWORD=root -p 3306:3306 -d mysql:8
+   ```
+2. Garanta privilégios:
+   ```sql
+   CREATE DATABASE IF NOT EXISTS api_readings;
+   GRANT ALL PRIVILEGES ON api_readings.* TO 'admin'@'%';
+   FLUSH PRIVILEGES;
+   ```
+
+## Execução
+
 ```bash
 cd back-end
 ./mvnw spring-boot:run
 ```
 
-2. **Iniciar o Frontend:**
+O servidor fica acessível em `http://localhost:8080` com rotas sob `/api`.
+
+## Endpoints Principais
+
+- `POST /api/auth/register` – cadastro de usuários
+- `POST /api/auth/login` – login e emissão de JWT
+- `GET /api/readings` – lista leituras (requer JWT)
+- `POST /api/readings` – cria leitura (requer JWT)
+
+### Exemplo rápido de uso
+
 ```bash
-cd front-end
-npm install
-npm start
-```
+# Registrar usuário
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "123456"}'
 
-O servidor backend será iniciado em: `http://localhost:8080`
+# Obter token
+TOKEN=$(curl -s -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "123456"}' | jq -r '.token')
 
-## Exemplos de Chamadas de API
-
-### POST /api/readings
-```bash
+# Criar leitura autenticada
 curl -X POST http://localhost:8080/api/readings \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"sensorId": "TEMP001", "value": 25.5}'
 ```
 
-**Resposta:**
-```json
-{
-  "id": 1,
-  "sensorId": "TEMP001",
-  "value": 25.5,
-  "timestamp": "2024-12-28T10:30:00.123456"
-}
-```
+## Testes e Verificação
 
-### GET /api/readings
-```bash
-curl -X GET http://localhost:8080/api/readings
-```
-
-**Resposta:**
-```json
-[
-  {
-    "id": 1,
-    "sensorId": "TEMP001",
-    "value": 25.5,
-    "timestamp": "2024-12-28T10:30:00.123456"
-  }
-]
-```
-
-### GET /api/readings/{sensorId}
-```bash
-curl -X GET http://localhost:8080/api/readings/TEMP001
-```
-
-**Resposta:**
-```json
-[
-  {
-    "id": 1,
-    "sensorId": "TEMP001",
-    "value": 25.5,
-    "timestamp": "2024-12-28T10:30:00.123456"
-  }
-]
-```
-
-## Prints das Telas
-
-### Requisição GET
-
-![alt](../assets/foto-requisicao-get.png)
-
-### Requisição POST
-
-![alt](../assets/foto-requisicao-post.png)
+- Execução de testes automatizados (quando adicionados):
+  ```bash
+  ./mvnw test
+  ```

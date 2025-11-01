@@ -1,4 +1,6 @@
-# Frontend - React Native
+# Frontend - React Native / Expo
+
+Aplicativo mobile que consome o backend IoT e oferece dashboard, listagem e detalhes de sensores com autenticação JWT.
 
 ## Integrantes
 
@@ -8,75 +10,64 @@
 - **Maria Eduarda de Carvalho Goda** - RM: 552276
 - **Maria Eloisa da Silva Santos** - RM: 552294
 
-## Instruções para Execução
+## Tecnologias e Arquitetura
 
-### Backend e Frontend em Conjunto
+- React Native 0.79 com Expo SDK 53
+- React Navigation (stack navigator)
+- Axios com interceptores JWT (`apiService`)
+- AsyncStorage para persistência de token e URL da API
+- `NotificationContext` para toasts globais de sucesso/erro
+- `react-native-chart-kit` para gráficos
 
-1. **Iniciar o Backend:**
-```bash
-cd back-end
-./mvnw spring-boot:run
-```
+### Estrutura principal
 
-2. **Iniciar o Frontend:**
-```bash
-cd front-end
-npm install
-npm start
-```
+- `App.tsx`: inicialização, controle de autenticação e rotas
+- `src/screens/`: Login, Dashboard, SensorList, SensorDetail, Settings
+- `src/services/apiService.ts`: cliente Axios com interceptores
+- `src/context/NotificationContext.tsx`: provider de notificações visuais
+- `src/hooks/useSensorDashboard.ts`: agregações de leituras para dashboard
 
-3. **Configurar no App:**
-- Abrir o app
-- Ir em Configurações
-- Definir URL da API:
-  - Emulador Android: `http://10.0.2.2:8080/api`
-  - iOS Simulator: `http://localhost:8080/api`
-  - Dispositivo físico: `http://[SEU_IP]:8080/api`
+## Requisitos
 
-## Exemplos de Chamadas de API
+- Node.js 18+
+- npm 10+ ou Yarn
+- Expo CLI (`npm install -g expo-cli`)
+- Backend rodando em `http://<host>:8080/api`
 
-### GET /api/readings
-```json
-[
-  {
-    "id": 1,
-    "sensorId": "TEMP001",
-    "value": 23.5,
-    "timestamp": "2024-12-28T10:30:00"
-  }
-]
-```
+## Setup
 
-### POST /api/readings
-```json
-{
-  "sensorId": "TEMP001",
-  "value": 25.0
-}
-```
+1. Instale dependências:
+   ```bash
+   cd front-end
+   npm install
+   ```
+2. Inicie o bundler Expo:
+   ```bash
+   npm start
+   ```
+3. Abra o app no Expo Go ou emulador.
+4. Acesse **Configurações** dentro do app e configure a URL da API conforme o ambiente:
+   - Emulador Android: `http://10.0.2.2:8080/api`
+   - iOS Simulator: `http://localhost:8080/api`
+   - Dispositivo físico: `http://SEU_IP_LOCAL:8080/api`
 
-### GET /api/readings/TEMP001
-```json
-[
-  {
-    "id": 1,
-    "sensorId": "TEMP001",
-    "value": 23.5,
-    "timestamp": "2024-12-28T10:30:00"
-  }
-]
-```
+## Fluxos principais
 
-## Prints das Telas
+- **Login/Cadastro**: chama `/api/auth/login` ou `/api/auth/register`; token é salvo e usado automaticamente.
+- **Dashboard**: exibe cards ou gráficos com estatísticas das leituras.
+- **Lista de Sensores**: mostra últimas leituras e acessa detalhes.
+- **Detalhe do Sensor**: histórico, gráfico e opção de registrar leitura mock.
+- **Configurações**: alteração da base URL e teste de conectividade.
 
-### Tela de Lista de Sensores
+## Scripts úteis
 
-![alt](../assets/foto-sensores.png)
+- `npm start`: inicia Metro bundler do Expo
+- `npm run android`: build/rodar projeto em dispositivo Android
+- `npm run ios`: build/rodar no simulador iOS
+- `npm run web`: rodar versão web via Expo
 
-### Tela de Detalhes
+## Boas práticas
 
-![alt](../assets/foto-sensor-dados.png)
-
-### Tela de Configurações
-
-![alt](../assets/foto-configuracoes.png)
+- Sempre iniciar o backend antes de abrir o app para evitar erros de conexão.
+- Utilizar a tela de Configurações para validar a URL da API e teste de conexão.
+- Em caso de problemas de login, conferir se o token foi armazenado em `AsyncStorage` (chave `authToken`).
