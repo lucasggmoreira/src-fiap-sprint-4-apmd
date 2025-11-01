@@ -20,6 +20,7 @@ interface SettingsScreenProps {
 const SettingsScreen = ({ onLogout }: SettingsScreenProps) => {
   const [apiUrl, setApiUrl] = useState(apiService.getBaseURL() || 'http://localhost:8080/api');
   const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [feedback, setFeedback] = useState<{ message: string; tone: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
     loadApiUrl();
@@ -35,6 +36,7 @@ const SettingsScreen = ({ onLogout }: SettingsScreenProps) => {
       }
     } catch (error) {
       console.error('Error loading API URL:', error);
+      setFeedback({ message: 'Não foi possível carregar a URL salva.', tone: 'error' });
     }
   };
 
@@ -42,28 +44,32 @@ const SettingsScreen = ({ onLogout }: SettingsScreenProps) => {
     try {
       await AsyncStorage.setItem('apiUrl', apiUrl);
       apiService.setBaseURL(apiUrl);
-      Alert.alert('Sucesso', 'URL da API salva com sucesso!');
+      setFeedback({ message: 'URL da API salva com sucesso!', tone: 'success' });
     } catch (error) {
       console.error('Error saving API URL:', error);
-      Alert.alert('Erro', 'Falha ao salvar URL da API');
+      setFeedback({ message: 'Falha ao salvar URL da API.', tone: 'error' });
     }
   };
 
   const testConnection = async () => {
     if (!apiService.getToken()) {
-      Alert.alert('Autenticação necessária', 'Realize login antes de testar a conexão.');
+      setFeedback({ message: 'Realize login antes de testar a conexão.', tone: 'error' });
       return;
     }
     setIsTestingConnection(true);
+    setFeedback(null);
     try {
       const isConnected = await apiService.testConnection();
       if (isConnected) {
-        Alert.alert('Sucesso', 'Conexão com a API estabelecida com sucesso!');
+        setFeedback({ message: 'Conexão com a API estabelecida com sucesso!', tone: 'success' });
       } else {
-        Alert.alert('Erro', 'Não foi possível conectar com a API. Verifique a URL e se o backend está rodando.');
+        setFeedback({
+          message: 'Não foi possível conectar com a API. Verifique a URL e se o backend está rodando.',
+          tone: 'error',
+        });
       }
     } catch (error) {
-      Alert.alert('Erro', 'Erro ao testar conexão com a API');
+      setFeedback({ message: 'Erro ao testar conexão com a API.', tone: 'error' });
     } finally {
       setIsTestingConnection(false);
     }
@@ -89,6 +95,17 @@ const SettingsScreen = ({ onLogout }: SettingsScreenProps) => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Configurações da API</Text>
+
+      {feedback && (
+        <View
+          style={[
+            styles.feedbackBox,
+            feedback.tone === 'success' ? styles.feedbackSuccess : styles.feedbackError,
+          ]}
+        >
+          <Text style={styles.feedbackText}>{feedback.message}</Text>
+        </View>
+      )}
       
       <View style={styles.section}>
         <Text style={styles.label}>URL da API:</Text>
@@ -135,12 +152,11 @@ const SettingsScreen = ({ onLogout }: SettingsScreenProps) => {
           • Para dispositivos físicos, use o IP da sua máquina
         </Text>
       </View>
-    </ScrollView>
-  );
-
       <TouchableOpacity style={styles.logoutButton} onPress={confirmLogout}>
         <Text style={styles.logoutButtonText}>Sair</Text>
       </TouchableOpacity>
+    </ScrollView>
+  );
 };
 
 const styles = StyleSheet.create({
@@ -222,6 +238,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     lineHeight: 20,
+  },
+  feedbackBox: {
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  feedbackSuccess: {
+    backgroundColor: '#E6F4EA',
+    borderWidth: 1,
+    borderColor: '#A8D5BA',
+  },
+  feedbackError: {
+    backgroundColor: '#FDECEA',
+    borderWidth: 1,
+    borderColor: '#F5C2C0',
+  },
+  feedbackText: {
+    color: '#333',
+    textAlign: 'center',
   },
   logoutButton: {
     marginTop: 30,

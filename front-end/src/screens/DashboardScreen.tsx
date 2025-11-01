@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useLayoutEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,16 @@ const DashboardScreen = () => {
   const [viewMode, setViewMode] = useState<'cards' | 'charts'>('cards');
   const navigation = useNavigation<any>();
   const { width: windowWidth } = useWindowDimensions();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate('Settings')}>
+          <Text style={styles.headerButtonText}>Configurações</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   const cardLayout = useMemo(() => {
     const columns = windowWidth >= 900 ? 3 : windowWidth >= 600 ? 2 : 1;
@@ -245,6 +255,19 @@ const styles = StyleSheet.create({
   toggleButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  headerButton: {
+    marginRight: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  headerButtonText: {
+    color: '#fff',
+    fontWeight: '600',
   },
   card: {
     backgroundColor: '#ffffff',
