@@ -1,36 +1,72 @@
-import React, { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ActivityIndicator, View } from 'react-native';
 
 import SensorListScreen from './src/screens/SensorListScreen';
 import SensorDetailScreen from './src/screens/SensorDetailScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import LoginScreen from './src/screens/LoginScreen';
 import { apiService } from './src/services/apiService';
 
 const Stack = createStackNavigator();
 
 export default function App() {
-  useEffect(() => {
-    // Carregar configurações salvas na inicialização
-    loadSettings();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [initializing, setInitializing] = useState(true);
+
+  const handleLogout = useCallback(() => {
+    AsyncStorage.removeItem('authToken').catch(console.error);
+    apiService.clearToken();
+    setIsAuthenticated(false);
   }, []);
 
-  const loadSettings = async () => {
-    try {
-      const savedUrl = await AsyncStorage.getItem('apiUrl');
-      if (savedUrl) {
-        apiService.setBaseURL(savedUrl);
+  const handleLoginSuccess = useCallback((token: string) => {
+    AsyncStorage.setItem('authToken', token).catch(console.error);
+    apiService.setToken(token);
+    setIsAuthenticated(true);
+  }, []);
+
+  useEffect(() => {
+    apiService.setUnauthorizedHandler(handleLogout);
+  }, [handleLogout]);
+
+  useEffect(() => {
+    const loadAppState = async () => {
+      try {
+        const savedUrl = await AsyncStorage.getItem('apiUrl');
+        if (savedUrl) {
+          apiService.setBaseURL(savedUrl);
+        }
+
+        const savedToken = await AsyncStorage.getItem('authToken');
+        if (savedToken) {
+          apiService.setToken(savedToken);
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        console.error('Error loading stored configuration:', error);
+      } finally {
+        setInitializing(false);
       }
-    } catch (error) {
-      console.error('Error loading settings:', error);
-    }
-  };
+    };
+
+    loadAppState();
+  }, []);
+
+  if (initializing) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
 
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="SensorList"
+        key={isAuthenticated ? 'auth-stack' : 'guest-stack'}
         screenOptions={{
           headerStyle: {
             backgroundColor: '#007AFF',
@@ -41,21 +77,46 @@ export default function App() {
           },
         }}
       >
-        <Stack.Screen 
-          name="SensorList" 
-          component={SensorListScreen}
-          options={{ title: 'Sensores IoT' }}
-        />
-        <Stack.Screen 
-          name="SensorDetail" 
-          component={SensorDetailScreen}
-          options={{ title: 'Detalhes do Sensor' }}
-        />
-        <Stack.Screen 
-          name="Settings" 
-          component={SettingsScreen}
-          options={{ title: 'Configurações' }}
-        />
+        {isAuthenticated ? (
+          <>
+            <Stack.Screen
+              name="SensorList"
+              component={SensorListScreen}
+              options={{ title: 'Sensores IoT' }}
+            />
+            <Stack.Screen
+              name="SensorDetail"
+              component={SensorDetailScreen}
+              options={{ title: 'Detalhes do Sensor' }}
+            />
+            <Stack.Screen
+              name="Settings"
+              options={{ title: 'Configurações' }}
+            >
+              {(props) => <SettingsScreen {...props} onLogout={handleLogout} />}
+            </Stack.Screen>
+          </>
+        ) : (
+          <>
+            <Stack.Screen
+              name="Login"
+              options={{ headerShown: false }}
+            >
+              {(props) => (
+                <LoginScreen
+                  {...props}
+                  onLoginSuccess={handleLoginSuccess}
+                />
+              )}
+            </Stack.Screen>
+            <Stack.Screen
+              name="Settings"
+              options={{ title: 'Configurações' }}
+            >
+              {(props) => <SettingsScreen {...props} onLogout={handleLogout} />}
+            </Stack.Screen>
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

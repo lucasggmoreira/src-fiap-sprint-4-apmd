@@ -1,18 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet, 
+import { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
   Alert,
-  ScrollView
+  ScrollView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiService } from '../services/apiService';
 
-const SettingsScreen: React.FC = () => {
-  const [apiUrl, setApiUrl] = useState('http://localhost:8080/api');
+interface SettingsScreenProps {
+  onLogout: () => Promise<void> | void;
+  navigation?: any;
+  route?: any;
+}
+
+const SettingsScreen = ({ onLogout }: SettingsScreenProps) => {
+  const [apiUrl, setApiUrl] = useState(apiService.getBaseURL() || 'http://localhost:8080/api');
   const [isTestingConnection, setIsTestingConnection] = useState(false);
 
   useEffect(() => {
@@ -22,9 +28,10 @@ const SettingsScreen: React.FC = () => {
   const loadApiUrl = async () => {
     try {
       const savedUrl = await AsyncStorage.getItem('apiUrl');
-      if (savedUrl) {
-        setApiUrl(savedUrl);
-        apiService.setBaseURL(savedUrl);
+      const urlToUse = savedUrl || apiService.getBaseURL();
+      if (urlToUse) {
+        setApiUrl(urlToUse);
+        apiService.setBaseURL(urlToUse);
       }
     } catch (error) {
       console.error('Error loading API URL:', error);
@@ -43,6 +50,10 @@ const SettingsScreen: React.FC = () => {
   };
 
   const testConnection = async () => {
+    if (!apiService.getToken()) {
+      Alert.alert('Autenticação necessária', 'Realize login antes de testar a conexão.');
+      return;
+    }
     setIsTestingConnection(true);
     try {
       const isConnected = await apiService.testConnection();
@@ -56,6 +67,23 @@ const SettingsScreen: React.FC = () => {
     } finally {
       setIsTestingConnection(false);
     }
+  };
+
+  const confirmLogout = () => {
+    Alert.alert(
+      'Sair',
+      'Deseja encerrar a sessão?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Sair',
+          style: 'destructive',
+          onPress: () => {
+            onLogout();
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -109,6 +137,10 @@ const SettingsScreen: React.FC = () => {
       </View>
     </ScrollView>
   );
+
+      <TouchableOpacity style={styles.logoutButton} onPress={confirmLogout}>
+        <Text style={styles.logoutButtonText}>Sair</Text>
+      </TouchableOpacity>
 };
 
 const styles = StyleSheet.create({
@@ -190,6 +222,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     lineHeight: 20,
+  },
+  logoutButton: {
+    marginTop: 30,
+    backgroundColor: '#FF3B30',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  logoutButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

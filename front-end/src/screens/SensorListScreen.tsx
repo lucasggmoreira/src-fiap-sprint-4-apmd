@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -9,6 +9,7 @@ import {
   RefreshControl,
   Alert
 } from 'react-native';
+import axios from 'axios';
 import { apiService, SensorReading } from '../services/apiService';
 
 interface SensorListScreenProps {
@@ -21,7 +22,7 @@ interface SensorGroup {
   readingsCount: number;
 }
 
-const SensorListScreen: React.FC<SensorListScreenProps> = ({ navigation }) => {
+const SensorListScreen = ({ navigation }: SensorListScreenProps) => {
   const [readings, setReadings] = useState<SensorReading[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -37,6 +38,10 @@ const SensorListScreen: React.FC<SensorListScreenProps> = ({ navigation }) => {
       setReadings(data);
     } catch (error) {
       console.error('Error fetching readings:', error);
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        Alert.alert('Sessão expirada', 'Faça login novamente.');
+        return;
+      }
       Alert.alert(
         'Erro de Conexão', 
         'Não foi possível carregar os dados. Verifique as configurações da API.',

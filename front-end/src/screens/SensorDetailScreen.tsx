@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { 
+import { useState, useEffect, useCallback } from 'react';
+import {
   View, 
   Text, 
   TouchableOpacity, 
@@ -10,6 +10,7 @@ import {
   Dimensions
 } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
+import axios from 'axios';
 import { apiService, SensorReading, SensorReadingCreate } from '../services/apiService';
 
 interface SensorDetailScreenProps {
@@ -21,7 +22,7 @@ interface SensorDetailScreenProps {
   navigation: any;
 }
 
-const SensorDetailScreen: React.FC<SensorDetailScreenProps> = ({ route, navigation }) => {
+const SensorDetailScreen = ({ route, navigation }: SensorDetailScreenProps) => {
   const { sensorId } = route.params;
   const [readings, setReadings] = useState<SensorReading[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +43,10 @@ const SensorDetailScreen: React.FC<SensorDetailScreenProps> = ({ route, navigati
       setReadings(data.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()));
     } catch (error) {
       console.error('Error fetching sensor readings:', error);
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        Alert.alert('Sessão expirada', 'Faça login novamente.');
+        return;
+      }
       Alert.alert('Erro', 'Não foi possível carregar os dados do sensor');
     } finally {
       setLoading(false);
@@ -71,6 +76,10 @@ const SensorDetailScreen: React.FC<SensorDetailScreenProps> = ({ route, navigati
       await fetchSensorReadings(); // Recarregar dados
     } catch (error) {
       console.error('Error adding reading:', error);
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        Alert.alert('Sessão expirada', 'Faça login novamente.');
+        return;
+      }
       Alert.alert('Erro', 'Não foi possível adicionar nova leitura');
     } finally {
       setAddingReading(false);
