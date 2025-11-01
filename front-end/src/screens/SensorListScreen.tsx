@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import { apiService, SensorReading } from '../services/apiService';
+import { useNotification } from '../context/NotificationContext';
 
 interface SensorListScreenProps {
   navigation: any;
@@ -26,6 +27,7 @@ const SensorListScreen = ({ navigation }: SensorListScreenProps) => {
   const [readings, setReadings] = useState<SensorReading[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const { notifyError } = useNotification();
 
   useEffect(() => {
     fetchReadings();
@@ -49,9 +51,11 @@ const SensorListScreen = ({ navigation }: SensorListScreenProps) => {
     } catch (error) {
       console.error('Error fetching readings:', error);
       if (axios.isAxiosError(error) && error.response?.status === 401) {
+        notifyError('Sessão expirada. Faça login novamente.');
         Alert.alert('Sessão expirada', 'Faça login novamente.');
         return;
       }
+      notifyError('Não foi possível carregar os dados. Verifique a URL da API.');
       Alert.alert(
         'Erro de Conexão', 
         'Não foi possível carregar os dados. Verifique as configurações da API.',

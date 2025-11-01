@@ -12,6 +12,7 @@ import {
 import { LineChart } from 'react-native-chart-kit';
 import axios from 'axios';
 import { apiService, SensorReading, SensorReadingCreate } from '../services/apiService';
+import { useNotification } from '../context/NotificationContext';
 
 interface SensorDetailScreenProps {
   route: {
@@ -28,6 +29,7 @@ const SensorDetailScreen = ({ route, navigation }: SensorDetailScreenProps) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [addingReading, setAddingReading] = useState(false);
+  const { notifyError, notifySuccess } = useNotification();
 
   useEffect(() => {
     navigation.setOptions({
@@ -44,9 +46,11 @@ const SensorDetailScreen = ({ route, navigation }: SensorDetailScreenProps) => {
     } catch (error) {
       console.error('Error fetching sensor readings:', error);
       if (axios.isAxiosError(error) && error.response?.status === 401) {
+        notifyError('Sessão expirada. Faça login novamente.');
         Alert.alert('Sessão expirada', 'Faça login novamente.');
         return;
       }
+      notifyError('Não foi possível carregar os dados do sensor.');
       Alert.alert('Erro', 'Não foi possível carregar os dados do sensor');
     } finally {
       setLoading(false);
@@ -72,14 +76,17 @@ const SensorDetailScreen = ({ route, navigation }: SensorDetailScreenProps) => {
       };
 
       await apiService.createReading(newReading);
+      notifySuccess('Nova leitura adicionada com sucesso!');
       Alert.alert('Sucesso', 'Nova leitura adicionada com sucesso!');
       await fetchSensorReadings(); // Recarregar dados
     } catch (error) {
       console.error('Error adding reading:', error);
       if (axios.isAxiosError(error) && error.response?.status === 401) {
+        notifyError('Sessão expirada. Faça login novamente.');
         Alert.alert('Sessão expirada', 'Faça login novamente.');
         return;
       }
+      notifyError('Não foi possível adicionar nova leitura.');
       Alert.alert('Erro', 'Não foi possível adicionar nova leitura');
     } finally {
       setAddingReading(false);

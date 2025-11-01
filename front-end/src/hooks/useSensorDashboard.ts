@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { apiService, SensorReading } from '../services/apiService';
+import { useNotification } from '../context/NotificationContext';
 
 export interface SensorSummary {
   sensorId: string;
@@ -37,6 +38,7 @@ export const useSensorDashboard = (): DashboardState => {
   const [readings, setReadings] = useState<SensorReading[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
+  const { notifyError } = useNotification();
 
   const fetchReadings = async () => {
     setLoading(true);
@@ -55,6 +57,7 @@ export const useSensorDashboard = (): DashboardState => {
         }
       }
       setError(message);
+      notifyError(message);
     } finally {
       setLoading(false);
     }

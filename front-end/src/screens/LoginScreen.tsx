@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import { apiService } from '../services/apiService';
+import { useNotification } from '../context/NotificationContext';
 
 interface LoginScreenProps {
   navigation: any;
@@ -25,10 +26,12 @@ const LoginScreen = (props: LoginScreenProps) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<{ message: string; tone: 'error' | 'success' } | null>(null);
+  const { notifyError, notifySuccess } = useNotification();
 
   const handleSubmit = async () => {
     if (!username.trim() || !password.trim()) {
       setFeedback({ message: 'Informe usuário e senha.', tone: 'error' });
+      notifyError('Informe usuário e senha.');
       return;
     }
 
@@ -40,6 +43,7 @@ const LoginScreen = (props: LoginScreenProps) => {
       const { token } = await action.call(apiService, username.trim(), password.trim());
       apiService.setToken(token);
       await onLoginSuccess(token);
+      notifySuccess(mode === 'register' ? 'Cadastro realizado com sucesso!' : 'Login realizado com sucesso!');
       if (mode === 'register') {
         setFeedback({ message: 'Cadastro realizado com sucesso!', tone: 'success' });
       }
@@ -65,8 +69,8 @@ const LoginScreen = (props: LoginScreenProps) => {
           message = 'Não foi possível conectar ao backend. Verifique a URL e se o serviço está disponível.';
         }
       }
-
       setFeedback({ message, tone: 'error' });
+      notifyError(message);
     } finally {
       setLoading(false);
     }

@@ -10,6 +10,7 @@ import SettingsScreen from './src/screens/SettingsScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import { apiService } from './src/services/apiService';
+import { NotificationProvider } from './src/context/NotificationContext';
 
 const Stack = createStackNavigator();
 
@@ -65,67 +66,69 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        key={isAuthenticated ? 'auth-stack' : 'guest-stack'}
-        initialRouteName={isAuthenticated ? 'Dashboard' : 'Login'}
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: '#007AFF',
-          },
-          headerTintColor: '#fff',
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
-        }}
-      >
-        {isAuthenticated ? (
-          <>
-            <Stack.Screen
-              name="Dashboard"
-              component={DashboardScreen}
-              options={{ title: 'Dashboard' }}
-            />
-            <Stack.Screen
-              name="SensorList"
-              component={SensorListScreen}
-              options={{ title: 'Sensores IoT' }}
-            />
-            <Stack.Screen
-              name="SensorDetail"
-              options={{ title: 'Detalhes do Sensor' }}
-            >
-              {(props) => <SensorDetailScreen {...(props as any)} />}
-            </Stack.Screen>
-            <Stack.Screen
-              name="Settings"
-              options={{ title: 'Configurações' }}
-            >
-              {(props) => <SettingsScreen {...props} onLogout={handleLogout} />}
-            </Stack.Screen>
-          </>
-        ) : (
-          <>
-            <Stack.Screen
-              name="Login"
-              options={{ headerShown: false }}
-            >
-              {(props) => (
-                <LoginScreen
-                  {...props}
-                  onLoginSuccess={handleLoginSuccess}
-                />
-              )}
-            </Stack.Screen>
-            <Stack.Screen
-              name="Settings"
-              options={{ title: 'Configurações' }}
-            >
-              {(props) => <SettingsScreen {...props} onLogout={handleLogout} />}
-            </Stack.Screen>
-          </>
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <NotificationProvider>
+      <NavigationContainer>
+        <Stack.Navigator
+          key={isAuthenticated ? 'auth-stack' : 'guest-stack'}
+          initialRouteName={isAuthenticated ? 'Dashboard' : 'Login'}
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: '#007AFF',
+            },
+            headerTintColor: '#fff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }}
+        >
+          {isAuthenticated ? (
+            <>
+              <Stack.Screen
+                name="Dashboard"
+                component={DashboardScreen}
+                options={{ title: 'Dashboard' }}
+              />
+              <Stack.Screen
+                name="SensorList"
+                component={SensorListScreen}
+                options={{ title: 'Sensores IoT' }}
+              />
+              <Stack.Screen
+                name="SensorDetail"
+                options={{ title: 'Detalhes do Sensor' }}
+              >
+                {(props) => <SensorDetailScreen {...(props as any)} />}
+              </Stack.Screen>
+              <Stack.Screen
+                name="Settings"
+                options={{ title: 'Configurações' }}
+              >
+                {(props) => <SettingsScreen {...props} onLogout={handleLogout} />}
+              </Stack.Screen>
+            </>
+          ) : (
+            <>
+              <Stack.Screen
+                name="Login"
+                options={{ headerShown: false }}
+              >
+                {(props) => (
+                  <LoginScreen
+                    {...props}
+                    onLoginSuccess={handleLoginSuccess}
+                  />
+                )}
+              </Stack.Screen>
+              <Stack.Screen
+                name="Settings"
+                options={{ title: 'Configurações' }}
+              >
+                {(props) => <SettingsScreen {...props} onLogout={handleLogout} />}
+              </Stack.Screen>
+            </>
+          )}
+        </Stack.Navigator>
+      </NavigationContainer>
+    </NotificationProvider>
   );
 }
